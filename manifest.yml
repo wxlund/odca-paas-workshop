@@ -1,6 +1,6 @@
 ---
 applications:
-- name: ocda
+- name: PaaSTutorial
   memory: 256M
   services:
     - ocdadb
