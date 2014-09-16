@@ -1,0 +1,8 @@
+---
+applications:
+- name: ocda
+  memory: 256M
+  services:
+    - ocdadb
+
+
