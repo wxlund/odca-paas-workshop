@@ -10,11 +10,12 @@ app.set('port', process.env.PORT || 4000);
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
 app.use(express.bodyParser());
+app.use(app.router);
 app.use(express.static(path.join(__dirname, 'public')));
 
 var mongoEnv = {};
 
-if(process.env.VCAP_SERVICES){
+if (process.env.VCAP_SERVICES) {
 	  var vcap_services = JSON.parse(process.env.VCAP_SERVICES);
 	  var parseString = vcap_services.mongolab[0].credentials.uri;
 	  var elements = parseString.split(":");
@@ -87,6 +88,7 @@ console.log("mongourl: " + mongourl);
 console.log("mongo.hostname: " + mongoEnv.hostname);
 console.log("mongo.port: " + mongoEnv.port);
 
+
 var mongohandle = new MongoHandle(new MongoServer(mongoEnv.hostname,mongoEnv.port));
 mongohandle.open(function(err,mongohandle){
 	if (!err) {
@@ -116,15 +118,54 @@ mongohandle.open(function(err,mongohandle){
 		}
 	}
 	collections = new Collections(db);
-});
-	
-
+});	
 //AT this stage, we do have our DB connectivity established !
 
+var appInstance = {};
+var startedAt = new Date();
+
+var describeAppInstance = function() {
+	var port;
+	var vcapApplication;
+	var vcapServices;
+	if (process.env.PORT) {
+		port = process.env.PORT;
+		vcapApplication = JSON.parse(process.env.VCAP_APPLICATION || '{}');
+		vcapServices = process.env.VCAP_SERVICES;
+		appInstance = {
+			"now" : new Date(),
+			"port" : app.port,
+			"vcapApplication" : vcapApplication,
+			"vcapServices" : vcapServices
+		}
+	} else {
+		port = app.port;
+		vcapApplication = {
+				"instance_id" : "0",
+				"instance_index": "0",
+				"started_at" : startedAt
+		}
+		vcapServices = "localhost:27017/PaaSWorkshop";
+		appInstance = {
+			"now" : new Date(),
+			"port" : app.port,
+			"vcapApplication" : vcapApplication,
+			"vcapServices" : vcapServices
+		}
+		return appInstance;
+	}
+}
 
 app.get('/', function (req, res) {
-  res.send('<html><body><h1>Welcome to PaaS Workshop !!</h1></body></html>');
+	appInstance = describeAppInstance(); 
+	console.log("appInstance.now" + appInstance.now);
+	res.render('index', { title: 'PaaS Workshop', now: appInstance.now.toLocaleString(), 
+		port: appInstance.port, vcapApplication: appInstance.vcapApplication, 
+		vcapServices: appInstance.vcapServices });
 });
+
+	
+
 
 //Get the Collections from Mongo -- Route
 app.get('/collections/:collection', function(req, res) { //A
@@ -133,7 +174,12 @@ app.get('/collections/:collection', function(req, res) { //A
     	  if (error) { res.send(400, error); } //D
 	      else { 
 	          if (req.accepts('html')) { //E
-    	          res.render('data',{objects: objs, collection: req.params.collection}); //F
+	        	  appInstance = describeAppInstance();
+    	          res.render('data',{ title: 'data', now:  appInstance.now.toLocaleString(), 
+    	        	  port: appInstance.port, 
+    	        	  vcapApplication: appInstance.vcapApplication, 
+    	        	  vcapServices: appInstance.vcapServices, objects: objs, 
+    	        	  collection: req.params.collection}); //F
               } else {
 	          res.set('Content-Type','application/json'); //G
                   res.send(200, objs); //H

@@ -3,7 +3,7 @@ extends layout
 block content
   div(class='row')
     div(class='large-12 columns')
-    h3(style='color: #01786E') Runtime environment
+    h3(style='color: #01786E') Welcome to PaaS Workshop !! CF
     hr
   div(class='row')
     div(class='large-12 columns')
@@ -17,13 +17,3 @@ block content
         p The bound services are <em>#{vcapServices}</em>
     hr
 
-    h1= "View :" + collection
-    #objects
-        table(border=1)
-          if objects.length > 0
-              - each val, key in objects[0]
-                  th= key 
-          - each obj in objects
-            tr.obj
-              - each val, key in obj
-                td.key= val
