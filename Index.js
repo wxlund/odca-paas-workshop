@@ -28,23 +28,16 @@ if (process.env.VCAP_SERVICES) {
 		  if (i === 0) {
 			  var end = parseString.indexOf("://");
 			  var protocol = elements[i];
-			  console.log("protocol: " + protocol);
-			  
 		  } else if (i === 1) {
 			  user = elements[i].substring(2, elements[i].length);
-			  console.log("user: " + user);
 		  } else if (i === 2) {
 			  var passEnd = elements[i].indexOf("@");
 			  password = elements[i].substring(0, passEnd);
-			  console.log("password: " + password);
 			  hostname = elements[i].substring(passEnd + 1, elements[i].length);
-			  console.log("hostname: " + hostname)
 		  } else if (i === 3 ) {
 			  end = elements[i].indexOf('/');
 			  port = elements[i].substring(0, end);
-			  console.log("port: " + port)
 			  db = elements[i].substring(end + 1, elements[i].length);
-			  console.log("db: " + db)
 		  }
   		}
 	  mongoEnv = {
@@ -67,11 +60,6 @@ if (process.env.VCAP_SERVICES) {
 
 
 var generate_mongo_url = function(obj) {
-	console.log("trace: generate_mongo_url");
-	console.log("obj.hostname: " + obj.hostname);
-	console.log("obj.username: " + obj.username);
-	console.log("obj.password: " + obj.password);
-	console.log("obj.port: " + obj.port);
 	  if(obj.username && obj.password){
 	    return "mongodb://" + obj.username + ":" + obj.password + "@" + obj.hostname + ":" + obj.port + "/" + obj.db;
 	  }
@@ -82,17 +70,10 @@ var generate_mongo_url = function(obj) {
 
 var mongourl = generate_mongo_url(mongoEnv);
 
-//Open the connection with database now..
-console.log("mongo: " + mongoEnv);
-console.log("mongourl: " + mongourl);
-console.log("mongo.hostname: " + mongoEnv.hostname);
-console.log("mongo.port: " + mongoEnv.port);
-
-
+//Open the connection with database ..
 var mongohandle = new MongoHandle(new MongoServer(mongoEnv.hostname,mongoEnv.port));
 mongohandle.open(function(err,mongohandle){
 	if (!err) {
-		console.log("Connected to database");
 		if(!mongohandle){
 			console.error("Oops ! MongoDB is not available..Start it");
 			process.exit(1);
@@ -100,8 +81,8 @@ mongohandle.open(function(err,mongohandle){
 		// mongolabs manages database and we have only user rights.
 		var db;
 		if (process.env.VCAP_SERVICES) {
-			console.log("Setting db to CloudFoundry_ri5de6se_mu7oe30a");
-			db = mongohandle.db("CloudFoundry_ri5de6se_mu7oe30a");
+			console.log("Setting mongohandle db to: " + db);
+			db = mongohandle.db(mongoEnv.db);
 		} else {
 			console.log("Setting db to PaaSWorkshop");
 			db = mongohandle.db("PaaSWorkshop");		
@@ -125,21 +106,22 @@ var appInstance = {};
 var startedAt = new Date();
 
 var describeAppInstance = function() {
-	var port;
+	var port = 4000;
+	var now = new Date();
 	var vcapApplication;
 	var vcapServices;
 	if (process.env.PORT) {
+		("Trace: have process.env.PORT: " + process.env.PORT);
 		port = process.env.PORT;
 		vcapApplication = JSON.parse(process.env.VCAP_APPLICATION || '{}');
 		vcapServices = process.env.VCAP_SERVICES;
 		appInstance = {
-			"now" : new Date(),
-			"port" : app.port,
+			"now" : now,
+			"port" : port,
 			"vcapApplication" : vcapApplication,
 			"vcapServices" : vcapServices
 		}
 	} else {
-		port = app.port;
 		vcapApplication = {
 				"instance_id" : "0",
 				"instance_index": "0",
@@ -147,21 +129,21 @@ var describeAppInstance = function() {
 		}
 		vcapServices = "localhost:27017/PaaSWorkshop";
 		appInstance = {
-			"now" : new Date(),
-			"port" : app.port,
+			"now" : now,
+			"port" : port,
 			"vcapApplication" : vcapApplication,
 			"vcapServices" : vcapServices
-		}
-		return appInstance;
+		};
 	}
+	return appInstance;
 }
 
 app.get('/', function (req, res) {
-	appInstance = describeAppInstance(); 
-	console.log("appInstance.now" + appInstance.now);
-	res.render('index', { title: 'PaaS Workshop', now: appInstance.now.toLocaleString(), 
-		port: appInstance.port, vcapApplication: appInstance.vcapApplication, 
-		vcapServices: appInstance.vcapServices });
+	ai = describeAppInstance(); 
+	("process.env.PORT: " + process.env.PORT);
+	res.render('index', { title: 'PaaS Workshop', now: ai.now.toLocaleString(), 
+		port: ai.port, vcapApplication: ai.vcapApplication, 
+		vcapServices: ai.vcapServices });
 });
 
 	
@@ -170,12 +152,14 @@ app.get('/', function (req, res) {
 //Get the Collections from Mongo -- Route
 app.get('/collections/:collection', function(req, res) { //A
    var params = req.params; //B
+
    collections.findAll(req.params.collection, function(error, objs) { //C
-    	  if (error) { res.send(400, error); } //D
+	   appInstance = describeAppInstance();
+	   ("appInstance.now: " + appInstance.now);
+	   if (error) { res.send(400, error); } //D
 	      else { 
 	          if (req.accepts('html')) { //E
-	        	  appInstance = describeAppInstance();
-    	          res.render('data',{ title: 'data', now:  appInstance.now.toLocaleString(), 
+    	          res.render('data',{ title: 'data', now:  appInstance.now, 
     	        	  port: appInstance.port, 
     	        	  vcapApplication: appInstance.vcapApplication, 
     	        	  vcapServices: appInstance.vcapServices, objects: objs, 

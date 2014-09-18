@@ -9,12 +9,14 @@ block content
     div(class='large-12 columns')
       div(class='panel')
         h4 Environment Information
-        p The current server time is <em>#{now}</em>
-        p The application port is <em>#{port}</em>
-        p The instance ID is <em>#{vcapApplication['instance_id']}</em>
-        p The instance index is <em>#{vcapApplication['instance_index']}</em>
-        p The instance was started at <em>#{vcapApplication['started_at']}</em>
-        p The bound services are <em>#{vcapServices}</em>
+        ul
+        li The current server time is <em>#{now}</em>
+        li The application port is <em>#{port}</em>
+        li The instance ID is <em>#{vcapApplication['instance_id']}</em>
+        li The instance index is <em>#{vcapApplication['instance_index']}</em>
+        li The instance was started at <em>#{vcapApplication['started_at']}</em>
+        li The bound services are <em>#{vcapServices}</em>
+        ul
     hr
 
     h1= "View :" + collection
