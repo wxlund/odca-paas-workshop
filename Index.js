@@ -1,3 +1,5 @@
+//Credit:This implementation is inspired by blog written by Michael Katz
+//http://www.raywenderlich.com/61078/write-simple-node-jsmongodb-web-service-ios-app
 var http = require('http'),
     express = require('express'),
     path = require('path');
@@ -201,7 +203,7 @@ app.delete('/collections/:collection/:entity', function(req, res) {
     var entity = params.entity;
     var collection = params.collection;
     if (entity) {
-       collections.delete(collection, entity, function(error, objs) { 
+       collections.remove(collection, entity, function(error, objs) { 
           if (error) { res.send(400, error); }
           else { res.send(200, objs); } 
        });
