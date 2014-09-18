@@ -1,6 +1,6 @@
 ---
 applications:
-- name: webjs-user1
+- name: webjs-jfo
   memory: 256M
 
 
