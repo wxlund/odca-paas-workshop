@@ -1,6 +1,6 @@
 ---
 applications:
-- name: webjs-jfo
+- name: webjs-wll
   memory: 256M
 
 
